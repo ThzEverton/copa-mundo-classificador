@@ -91,25 +91,30 @@ O modelo usa divisao de 70% dos dados para treino e 30% para teste.
 As metricas exibidas sao acuracia, matriz de confusao, importancia das variaveis,
 exemplos historicos parecidos e ranking das melhores campanhas da base.
 
-## Deploy futuro na Vercel
+## Deploy na Vercel
 
-O projeto ja possui arquivos iniciais para deploy:
+Aplicacao publicada:
+
+```text
+https://copa-mundo-classificador.vercel.app/
+```
+
+O projeto possui os arquivos necessarios para deploy:
 
 - `api/index.py`: ponto de entrada usado pela Vercel para executar o Flask.
 - `vercel.json`: redireciona as rotas para a funcao Python.
 - `requirements.txt`: lista as dependencias instaladas no deploy.
 
-Passos esperados pelo terminal:
+Para atualizar o deploy pelo terminal:
 
 ```bash
 vercel
 ```
 
-Ou, pelo GitHub:
+Ou, pelo fluxo GitHub + Vercel:
 
-1. Enviar o projeto para um repositorio.
-2. Importar o repositorio na Vercel.
-3. Manter o framework como "Other".
-4. Fazer o deploy.
+1. Fazer commit das alteracoes.
+2. Enviar para o GitHub.
+3. A Vercel atualiza o projeto automaticamente ou permite um novo deploy pelo painel.
 
 Observacao: a imagem da Arvore de Decisao e gerada em tempo de execucao e servida pela rota `/arvore_decisao.png`, o que evita depender de um arquivo estatico gerado manualmente.

@@ -159,17 +159,21 @@ O sistema tambem exibe:
 - ranking das melhores campanhas da base;
 - imagem da Arvore de Decisao.
 
-### Deploy futuro
+### Deploy da aplicacao
 
-O projeto ja foi preparado para um futuro deploy na Vercel.
+O projeto foi publicado na Vercel e pode ser acessado pelo link:
 
-Arquivos adicionados para isso:
+```text
+https://copa-mundo-classificador.vercel.app/
+```
+
+Arquivos usados para o deploy:
 
 - `api/index.py`: ponto de entrada da aplicacao Flask na Vercel;
 - `vercel.json`: arquivo de configuracao de rotas;
 - `requirements.txt`: dependencias do projeto.
 
-No deploy, e importante manter os CSVs dentro da pasta `data/`, para evitar que a aplicacao dependa de download externo ao iniciar.
+Os CSVs foram mantidos dentro da pasta `data/`, evitando que a aplicacao dependa de download externo ao iniciar no ambiente de producao.
 
 ## 5. Conclusao
 
@@ -185,5 +189,4 @@ Como melhorias futuras, seria possivel:
 - comparar outros algoritmos de classificacao;
 - salvar o modelo treinado em arquivo;
 - melhorar a validacao dos campos do formulario;
-- publicar a aplicacao na Vercel;
 - adicionar screenshots da aplicacao no relatorio final.
