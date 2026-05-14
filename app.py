@@ -398,11 +398,22 @@ MODEL_DATA = train_model()
 def index():
     result = None
     similar_examples = []
+    form_values = {
+        "total_goals_scored": "",
+        "total_goals_conceded": "",
+        "matches_played": "",
+    }
 
     if request.method == "POST" and MODEL_DATA["ready"]:
-        total_goals_scored = int(request.form.get("total_goals_scored", 0))
-        total_goals_conceded = int(request.form.get("total_goals_conceded", 0))
-        matches_played = max(int(request.form.get("matches_played", 1)), 1)
+        form_values = {
+            "total_goals_scored": request.form.get("total_goals_scored", ""),
+            "total_goals_conceded": request.form.get("total_goals_conceded", ""),
+            "matches_played": request.form.get("matches_played", ""),
+        }
+
+        total_goals_scored = int(form_values["total_goals_scored"] or 0)
+        total_goals_conceded = int(form_values["total_goals_conceded"] or 0)
+        matches_played = max(int(form_values["matches_played"] or 1), 1)
 
         goal_difference = total_goals_scored - total_goals_conceded
         goals_per_match = round(total_goals_scored / matches_played, 2)
@@ -436,6 +447,7 @@ def index():
         result=result,
         similar_examples=similar_examples,
         stage_options=STAGE_OPTIONS,
+        form_values=form_values,
     )
 
 

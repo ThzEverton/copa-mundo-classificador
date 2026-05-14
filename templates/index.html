@@ -70,17 +70,17 @@ python app.py</code></pre>
                     <form method="POST" class="form">
                         <label>
                             <span>Total de gols marcados</span>
-                            <input type="number" name="total_goals_scored" min="0" value="5" required>
+                            <input type="number" name="total_goals_scored" min="0" value="{{ form_values.total_goals_scored }}" placeholder="Ex: 5" autocomplete="off" required>
                         </label>
 
                         <label>
                             <span>Total de gols sofridos</span>
-                            <input type="number" name="total_goals_conceded" min="0" value="2" required>
+                            <input type="number" name="total_goals_conceded" min="0" value="{{ form_values.total_goals_conceded }}" placeholder="Ex: 2" autocomplete="off" required>
                         </label>
 
                         <label>
                             <span>Partidas jogadas</span>
-                            <input type="number" name="matches_played" min="1" value="3" required>
+                            <input type="number" name="matches_played" min="1" value="{{ form_values.matches_played }}" placeholder="Ex: 3" autocomplete="off" required>
                         </label>
 
                         <button type="submit">Simular campanha</button>
