@@ -108,6 +108,16 @@ Com base nessas respostas, o modelo classifica a selecao como perfil de avanco o
 
 Na importancia das variaveis, `matches_played` aparece como uma das mais importantes. Isso faz sentido porque selecoes que jogam mais partidas normalmente chegaram a fases posteriores da Copa.
 
+### Visualizacao da Arvore de Decisao
+
+A imagem abaixo representa a Arvore de Decisao treinada pelo modelo. Ela nao e uma imagem manual: e gerada automaticamente a partir do `DecisionTreeClassifier` depois do treinamento.
+
+![Imagem da Arvore de Decisao](https://copa-mundo-classificador.vercel.app/arvore_decisao.png)
+
+Cada caixa da arvore representa uma regra aprendida pelo modelo. Por exemplo, a arvore pode avaliar se a selecao disputou mais partidas, se teve saldo de gols positivo ou se marcou muitos gols. No final de cada caminho, o modelo chega a uma classe: `Avancou` ou `Eliminada`.
+
+Essa visualizacao foi incluida porque a Arvore de Decisao e um modelo interpretavel. Assim, alem de mostrar a previsao final, o projeto tambem mostra a logica usada pelo algoritmo para chegar ao resultado.
+
 ## 4. Guia da Aplicacao
 
 A aplicacao foi desenvolvida em Flask, com HTML, CSS e Jinja2.
