@@ -56,10 +56,12 @@ As principais transformacoes foram:
 | `goal_difference` | Saldo de gols |
 | `matches_played` | Numero de partidas jogadas |
 | `goals_per_match` | Media de gols por partida |
-| `stage_encoded` | Fase estimada a partir da posicao final, usada apenas para criar a classe |
+| `stage_encoded` | Fase estimada a partir da posicao final e do tamanho da Copa |
 | `advanced` | Variavel alvo: 1 para avancou, 0 para eliminada |
 
-A variavel `stage_encoded` nao entra como variavel de entrada do modelo, pois ela entregaria a resposta. Ela e usada apenas para construir a variavel alvo.
+A variavel `advanced` foi estimada usando a posicao final da selecao e a quantidade de participantes da edicao. Isso evita tratar todas as selecoes de Copas antigas, que tinham menos participantes, como se tivessem avancado automaticamente.
+
+A variavel `stage_encoded` nao entra como variavel de entrada do modelo, pois ela poderia entregar parte da resposta. Ela e usada apenas como informacao historica para organizar campanhas e exemplos.
 
 ## 3. Resultados do Modelo
 
@@ -86,7 +88,7 @@ A aplicacao calcula automaticamente:
 - matriz de confusao;
 - importancia das variaveis.
 
-Na execucao atual, a acuracia ficou em aproximadamente **85,71%**.
+Na execucao atual, a acuracia ficou em aproximadamente **97,96%**.
 
 A matriz de confusao mostra os acertos e erros do modelo para as duas classes:
 

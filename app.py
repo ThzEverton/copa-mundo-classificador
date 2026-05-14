@@ -197,6 +197,37 @@ def estimate_stage_from_position(position):
     return 0
 
 
+def estimate_advanced_from_position(position, total_teams):
+    """
+    Estima se a selecao avancou usando a posicao final e o tamanho da Copa.
+
+    Os CSVs anuais nao trazem uma coluna direta de fase. Para evitar que Copas
+    antigas com poucos participantes marquem todo mundo como "avancou", usamos
+    limites diferentes conforme a quantidade de selecoes na edicao.
+    """
+    if total_teams >= 24:
+        cutoff = 16
+    elif total_teams >= 16:
+        cutoff = 8
+    else:
+        cutoff = 4
+
+    return 1 if position <= cutoff else 0
+
+
+def estimate_stage_from_position_and_size(position, total_teams):
+    """Estima uma fase numerica respeitando o tamanho da Copa."""
+    if position <= 2:
+        return 5
+    if position <= 4:
+        return 3
+    if total_teams >= 16 and position <= 8:
+        return 2
+    if total_teams >= 24 and position <= 16:
+        return 1
+    return 0
+
+
 def build_dataset_from_annual_csv_folder(dataset_path):
     """
     Cria o dataset de treino lendo uma pasta com CSVs anuais, por exemplo:
@@ -213,6 +244,7 @@ def build_dataset_from_annual_csv_folder(dataset_path):
         year = int(match.group(1))
         csv_path = os.path.join(dataset_path, file_name)
         year_data = pd.read_csv(csv_path)
+        total_teams = len(year_data)
 
         for _, row in year_data.iterrows():
             position = int(row["Position"])
@@ -227,7 +259,8 @@ def build_dataset_from_annual_csv_folder(dataset_path):
                     "total_goals_scored": goals_scored,
                     "total_goals_conceded": goals_conceded,
                     "matches_played": matches_played,
-                    "stage_encoded": estimate_stage_from_position(position),
+                    "stage_encoded": estimate_stage_from_position_and_size(position, total_teams),
+                    "advanced": estimate_advanced_from_position(position, total_teams),
                 }
             )
 
@@ -241,7 +274,6 @@ def build_dataset_from_annual_csv_folder(dataset_path):
     dataset["goals_per_match"] = (
         dataset["total_goals_scored"] / dataset["matches_played"]
     ).round(2)
-    dataset["advanced"] = np.where(dataset["stage_encoded"] >= 1, 1, 0)
 
     return dataset
 
