@@ -548,11 +548,67 @@ button:active {
     overflow: hidden;
 }
 
-.tree-image {
-    width: 100%;
-    display: block;
+.tree-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.tree-summary div {
+    min-height: 128px;
+    padding: 16px;
     border: 1px solid var(--line);
     border-radius: 8px;
+    background: var(--panel-2);
+}
+
+.tree-summary strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--cream);
+    font-size: 1.02rem;
+}
+
+.tree-summary span {
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+.tree-details {
+    margin-top: 14px;
+}
+
+.tree-details summary {
+    width: fit-content;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid rgba(240, 228, 196, 0.28);
+    border-radius: 6px;
+    color: var(--cream);
+    background: rgba(13, 27, 21, 0.78);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.tree-details summary:hover {
+    background: rgba(240, 228, 196, 0.08);
+}
+
+.tree-image-wrap {
+    max-height: 440px;
+    margin-top: 14px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.tree-image {
+    width: 1180px;
+    max-width: none;
+    display: block;
     background: #ffffff;
 }
 

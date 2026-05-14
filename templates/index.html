@@ -260,9 +260,30 @@ python app.py</code></pre>
                 <div class="panel tree-panel">
                     <div class="section-title">
                         <span>Modelo</span>
-                        <h2>Arvore de Decisao</h2>
+                        <h2>Como a arvore decide</h2>
                     </div>
-                    <img class="tree-image" src="{{ url_for('tree_image') }}" alt="Imagem da arvore de decisao">
+
+                    <div class="tree-summary">
+                        <div>
+                            <strong>1. Partidas jogadas</strong>
+                            <span>O primeiro sinal e a quantidade de jogos. Quem passa de fase costuma jogar mais.</span>
+                        </div>
+                        <div>
+                            <strong>2. Saldo de gols</strong>
+                            <span>O modelo observa se a selecao marcou mais gols do que sofreu.</span>
+                        </div>
+                        <div>
+                            <strong>3. Gols marcados</strong>
+                            <span>Campanhas ofensivas ajudam a separar perfis de avanco e eliminacao.</span>
+                        </div>
+                    </div>
+
+                    <details class="tree-details">
+                        <summary>Ver imagem tecnica da arvore</summary>
+                        <div class="tree-image-wrap">
+                            <img class="tree-image" src="{{ url_for('tree_image') }}" alt="Imagem da arvore de decisao">
+                        </div>
+                    </details>
                 </div>
             </section>
         {% endif %}
