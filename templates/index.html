@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copa Odds AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="page">
+        <section class="hero">
+            <div class="stadium-lights" aria-hidden="true"></div>
+            <div class="hero-content">
+                <p class="eyebrow">Central da Copa</p>
+                <h1>Simulador de campanha da selecao.</h1>
+                <p class="subtitle">
+                    Informe o desempenho de uma selecao e veja a chance estimada pelo modelo
+                    de Arvore de Decisao treinado com Copas do Mundo historicas.
+                </p>
+
+                {% if model_data.ready %}
+                    <div class="hero-stats">
+                        <div>
+                            <strong>{{ "%.0f"|format(model_data.accuracy * 100) }}%</strong>
+                            <span>Acuracia</span>
+                        </div>
+                        <div>
+                            <strong>{{ model_data.total_rows }}</strong>
+                            <span>Perfis analisados</span>
+                        </div>
+                        <div>
+                            <strong>70/30</strong>
+                            <span>Treino e teste</span>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="live-ticket">
+                <span class="ticket-label">Resumo do modelo</span>
+                <div class="scoreboard">
+                    <span>Dados</span>
+                    <strong>70/30</strong>
+                    <span>Teste</span>
+                </div>
+                <div class="mini-pitch" aria-hidden="true">
+                    <span></span>
+                    <i></i>
+                </div>
+                <strong>Arvore de Decisao</strong>
+                <small>Sem apostas reais. Apenas previsao academica.</small>
+            </div>
+        </section>
+
+        {% if not model_data.ready %}
+            <section class="notice">
+                <h2>Base de dados nao carregada</h2>
+                <p>{{ model_data.message }}</p>
+                <pre><code>pip install -r requirements.txt
+python app.py</code></pre>
+            </section>
+        {% else %}
+            <section class="betting-board">
+                <div class="panel form-panel">
+                    <div class="section-title">
+                        <span>Controle</span>
+                        <h2>Monte seu time</h2>
+                    </div>
+
+                    <form method="POST" class="form">
+                        <label>
+                            <span>Total de gols marcados</span>
+                            <input type="number" name="total_goals_scored" min="0" value="5" required>
+                        </label>
+
+                        <label>
+                            <span>Total de gols sofridos</span>
+                            <input type="number" name="total_goals_conceded" min="0" value="2" required>
+                        </label>
+
+                        <label>
+                            <span>Partidas jogadas</span>
+                            <input type="number" name="matches_played" min="1" value="3" required>
+                        </label>
+
+                        <button type="submit">Simular campanha</button>
+                    </form>
+                </div>
+
+                <div class="panel prediction-panel">
+                    <div class="section-title">
+                        <span>Resultado</span>
+                        <h2>Leitura da campanha</h2>
+                    </div>
+
+                    {% if result %}
+                        {% if result.prediction == 1 %}
+                            <div class="status success">Alta chance de avancar</div>
+                        {% else %}
+                            <div class="status danger">Perfil de eliminacao</div>
+                        {% endif %}
+
+                        <div class="odds-display">
+                            <span>Chance de avanco</span>
+                            <strong>{{ result.advance_probability }}%</strong>
+                        </div>
+
+                        <div class="market-grid">
+                            <div>
+                                <span>Saldo</span>
+                                <strong>{{ result.goal_difference }}</strong>
+                            </div>
+                            <div>
+                                <span>Gols/jogo</span>
+                                <strong>{{ result.goals_per_match }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="result-explain">
+                            <strong>Como ler este resultado</strong>
+                            <p>
+                                O modelo compara gols, saldo e quantidade de jogos
+                                com selecoes historicas da base.
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="empty-board">
+                            <strong>Aguardando dados</strong>
+                            <span>Preencha o formulario para abrir a previsao.</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="dashboard">
+                <div class="metric-card highlight">
+                    <span>Acuracia</span>
+                    <strong>{{ "%.2f"|format(model_data.accuracy * 100) }}%</strong>
+                </div>
+                <div class="metric-card">
+                    <span>Avancaram</span>
+                    <strong>{{ model_data.class_distribution.get(1, 0) }}</strong>
+                </div>
+                <div class="metric-card">
+                    <span>Eliminadas</span>
+                    <strong>{{ model_data.class_distribution.get(0, 0) }}</strong>
+                </div>
+                <div class="metric-card">
+                    <span>Fonte</span>
+                    <strong>{{ model_data.data_source }}</strong>
+                </div>
+            </section>
+
+            {% if similar_examples %}
+                <section class="history-section">
+                    <div class="section-title">
+                        <span>Historico</span>
+                        <h2>Selecoes com perfil parecido</h2>
+                    </div>
+
+                    <div class="cards">
+                        {% for item in similar_examples %}
+                            <article class="card">
+                                <div>
+                                    <strong>{{ item.team }}</strong>
+                                    <span>{{ item.year }}</span>
+                                </div>
+                                <div class="card-numbers">
+                                    <span>{{ item.total_goals_scored }} GP</span>
+                                    <span>{{ item.total_goals_conceded }} GC</span>
+                                    <span>{{ item.matches_played }} J</span>
+                                </div>
+                                {% if item.advanced == 1 %}
+                                    <em class="success-text">Avancou</em>
+                                {% else %}
+                                    <em class="danger-text">Eliminada</em>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            <section class="analysis-grid">
+                <div class="panel">
+                    <div class="section-title">
+                        <span>Validacao</span>
+                        <h2>Matriz de Confusao</h2>
+                    </div>
+                    <table class="matrix">
+                        <tr>
+                            <th></th>
+                            <th>Previsto: Eliminada</th>
+                            <th>Previsto: Avancou</th>
+                        </tr>
+                        <tr>
+                            <th>Real: Eliminada</th>
+                            <td>{{ model_data.confusion_matrix[0][0] }}</td>
+                            <td>{{ model_data.confusion_matrix[0][1] }}</td>
+                        </tr>
+                        <tr>
+                            <th>Real: Avancou</th>
+                            <td>{{ model_data.confusion_matrix[1][0] }}</td>
+                            <td>{{ model_data.confusion_matrix[1][1] }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="panel">
+                    <div class="section-title">
+                        <span>Interpretacao</span>
+                        <h2>Importancia das variaveis</h2>
+                    </div>
+
+                    <div class="importance-list">
+                        {% for feature in model_data.feature_importance %}
+                            <div class="importance-item">
+                                <div>
+                                    <strong>{{ feature.label }}</strong>
+                                    <span>{{ "%.2f"|format(feature.importance) }}%</span>
+                                </div>
+                                <div class="importance-track">
+                                    <span style="width: {{ feature.importance }}%"></span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <section class="history-section">
+                <div class="section-title">
+                    <span>Ranking</span>
+                    <h2>Melhores campanhas da base</h2>
+                </div>
+
+                <div class="table-wrap">
+                    <table class="ranking-table">
+                        <tr>
+                            <th>Selecao</th>
+                            <th>Ano</th>
+                            <th>Gols</th>
+                            <th>Saldo</th>
+                            <th>Jogos</th>
+                        </tr>
+                        {% for item in model_data.examples %}
+                            <tr>
+                                <td>{{ item.team }}</td>
+                                <td>{{ item.year }}</td>
+                                <td>{{ item.total_goals_scored }}</td>
+                                <td>{{ item.goal_difference }}</td>
+                                <td>{{ item.matches_played }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </section>
+
+            <section class="analysis-grid single">
+                <div class="panel tree-panel">
+                    <div class="section-title">
+                        <span>Modelo</span>
+                        <h2>Arvore de Decisao</h2>
+                    </div>
+                    <img class="tree-image" src="{{ url_for('tree_image') }}" alt="Imagem da arvore de decisao">
+                </div>
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>

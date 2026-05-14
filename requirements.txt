@@ -1,0 +1,6 @@
+flask
+pandas
+scikit-learn
+matplotlib
+numpy
+kagglehub[pandas-datasets]
