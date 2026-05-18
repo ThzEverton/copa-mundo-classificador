@@ -147,26 +147,9 @@ def create_team_rows(matches):
 
 
 def build_dataset(matches):
-    """Monta a tabela final usada no problema de classificacao."""
-    # Importante: meu projeto e de CLASSIFICACAO, nao de agrupamento/K-Means.
-    # O objetivo do modelo e classificar uma selecao em duas classes:
-    # 0 = eliminada na fase de grupos
-    # 1 = avancou de fase
-    #
-    # O "groupby" abaixo e apenas uma etapa de preparacao dos dados.
-    # O CSV de partidas vem jogo por jogo, entao a mesma selecao aparece varias
-    # vezes na mesma Copa. Para treinar a Arvore de Decisao, eu preciso resumir
-    # isso em uma linha por selecao em cada ano, por exemplo:
-    # Brasil em 2002, Alemanha em 2014, Argentina em 2022.
+    """Agrupa os dados por selecao e ano da Copa para criar as features."""
     team_rows = create_team_rows(matches)
 
-    # O groupby junta as linhas que possuem o mesmo ano e o mesmo time.
-    # Isso nao e o algoritmo da atividade; e so a organizacao da tabela.
-    # Depois o agg calcula os totais daquela selecao naquela Copa:
-    # - soma os gols marcados;
-    # - soma os gols sofridos;
-    # - conta quantas partidas a selecao jogou;
-    # - pega a maior fase alcancada naquela Copa.
     dataset = (
         team_rows.groupby(["year", "team"])
         .agg(
@@ -178,22 +161,15 @@ def build_dataset(matches):
         .reset_index()
     )
 
-    # Saldo de gols = gols que fez menos gols que sofreu.
-    # Essa informacao ajuda o modelo porque mostra se a campanha foi forte ou nao.
     dataset["goal_difference"] = (
         dataset["total_goals_scored"] - dataset["total_goals_conceded"]
     )
 
-    # Media de gols por partida.
-    # Uso round(2) para deixar o numero com duas casas decimais e mais facil de ler.
     dataset["goals_per_match"] = (
         dataset["total_goals_scored"] / dataset["matches_played"]
     ).round(2)
 
-    # Esta e a variavel alvo da classificacao.
-    # Ela e a resposta que a Arvore de Decisao vai aprender:
-    # 1 significa que passou da fase de grupos;
-    # 0 significa que caiu na fase de grupos.
+    # Neste projeto, consideramos que avancou quem passou da fase de grupos.
     dataset["advanced"] = np.where(dataset["stage_encoded"] >= 1, 1, 0)
 
     return dataset
@@ -202,13 +178,6 @@ def build_dataset(matches):
 def estimate_stage_from_position(position):
     """
     Estima a fase atingida usando a classificacao final do dataset KaggleHub.
-
-    Esse dataset nao informa a fase em texto. Por isso usamos uma regra simples:
-    - posicoes 1 e 2 chegaram na final
-    - posicoes 3 e 4 chegaram na semifinal
-    - posicoes 5 a 8 chegaram nas quartas
-    - posicoes 9 a 16 chegaram nas oitavas
-    - acima de 16 ficaram na fase de grupos
     """
     if position <= 2:
         return 5
@@ -224,10 +193,6 @@ def estimate_stage_from_position(position):
 def estimate_advanced_from_position(position, total_teams):
     """
     Estima se a selecao avancou usando a posicao final e o tamanho da Copa.
-
-    Os CSVs anuais nao trazem uma coluna direta de fase. Para evitar que Copas
-    antigas com poucos participantes marquem todo mundo como "avancou", usamos
-    limites diferentes conforme a quantidade de selecoes na edicao.
     """
     if total_teams >= 24:
         cutoff = 16
@@ -260,9 +225,6 @@ def build_dataset_from_annual_csv_folder(dataset_path):
     """
     rows = []
 
-    # Nesta versao do projeto, os arquivos anuais ja vem mais resumidos:
-    # cada CSV representa uma Copa e cada linha representa uma selecao.
-    # Mesmo assim, eu monto um dataset padronizado com as mesmas colunas que o modelo usa.
     for file_name in os.listdir(dataset_path):
         match = re.match(ANNUAL_FILE_PATTERN, file_name)
         if not match:
@@ -279,9 +241,6 @@ def build_dataset_from_annual_csv_folder(dataset_path):
             goals_scored = int(row["Goals For"])
             goals_conceded = int(row["Goals Against"])
 
-            # Como esses CSVs nao trazem diretamente "fase de grupos", "quartas" etc.,
-            # eu estimo a fase usando a posicao final da selecao e o tamanho da Copa.
-            # Isso deixa o dataset pronto para comparar edicoes antigas e novas.
             rows.append(
                 {
                     "year": year,
@@ -298,8 +257,6 @@ def build_dataset_from_annual_csv_folder(dataset_path):
     if dataset.empty:
         raise FileNotFoundError("Nenhum arquivo anual FIFA - YYYY.csv foi encontrado.")
 
-    # Aqui sao criadas as features calculadas que nao vem prontas no CSV.
-    # Feature e uma informacao de entrada que a Arvore de Decisao usa para aprender.
     dataset["goal_difference"] = (
         dataset["total_goals_scored"] - dataset["total_goals_conceded"]
     )
@@ -376,16 +333,7 @@ def train_model():
     X = dataset[FEATURE_COLUMNS]
     y = dataset["advanced"]
 
-    # Aqui fica a separacao principal de um problema de classificacao:
-    # X sao as informacoes de entrada que o modelo usa para tomar decisao.
-    # y e a classe correta historica, ou seja, a resposta que o modelo deve aprender.
-    # Neste projeto:
-    # - X = gols marcados, gols sofridos, saldo, partidas e media de gols;
-    # - y = 0 para eliminada ou 1 para avancou.
-
     # Split obrigatorio do projeto: 70% treino e 30% teste.
-    # O modelo aprende com uma parte dos dados e depois e testado com outra parte,
-    # para eu conseguir medir se ele esta acertando dados que nao viu no treino.
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
@@ -394,16 +342,10 @@ def train_model():
         stratify=y,
     )
 
-    # max_depth deixa a arvore menor e mais facil de explicar na apresentacao.
-    # A Arvore de Decisao foi escolhida porque e um algoritmo de classificacao
-    # e tambem porque da para visualizar as regras que ela aprendeu.
+   
     model = DecisionTreeClassifier(max_depth=4, random_state=42)
     model.fit(X_train, y_train)
 
-    # Depois de treinar, eu pego as previsoes do conjunto de teste.
-    # Estas sao as metricas pedidas para classificacao:
-    # - acuracia: porcentagem geral de acertos;
-    # - matriz de confusao: mostra acertos e erros para cada classe.
     predictions = model.predict(X_test)
     accuracy = accuracy_score(y_test, predictions)
     matrix = confusion_matrix(y_test, predictions, labels=[0, 1])
@@ -431,26 +373,22 @@ def train_model():
 
 def generate_tree_image(model):
     """Gera a imagem da arvore para aparecer na aplicacao e no relatorio."""
-    # A figura fica maior para as regras da arvore aparecerem legiveis na tela.
-    # Como a arvore tem varias caixas, uma imagem pequena deixa o texto quase invisivel.
-    plt.figure(figsize=(30, 16))
+    plt.figure(figsize=(20, 10))
     plot_tree(
         model,
         feature_names=FEATURE_COLUMNS,
         class_names=["Eliminada", "Avancou"],
         filled=True,
         rounded=True,
-        fontsize=13,
+        fontsize=9,
     )
     plt.tight_layout()
-    plt.savefig(TREE_IMAGE_PATH, dpi=170)
+    plt.savefig(TREE_IMAGE_PATH, dpi=150)
     plt.close()
 
 
 def find_similar_examples(dataset, input_data):
     """Busca selecoes historicas com numeros parecidos com os digitados."""
-    # Esta funcao nao treina o modelo. Ela so serve para mostrar exemplos
-    # historicos parecidos com o que a pessoa digitou no formulario.
     comparison_columns = [
         "total_goals_scored",
         "total_goals_conceded",
@@ -460,20 +398,12 @@ def find_similar_examples(dataset, input_data):
     historical = dataset.copy()
 
     # Distancia simples: quanto menor, mais parecido com o formulario.
-    # Exemplo: se eu digito 8 gols e uma selecao historica fez 7,
-    # a diferenca nessa coluna e 1. O codigo soma essas diferencas em gols
-    # marcados, gols sofridos e partidas jogadas.
     historical["similarity_distance"] = 0
     for column in comparison_columns:
-        # abs() transforma a diferenca em valor positivo.
-        # Assim tanto faz se o historico foi maior ou menor, importa so o tamanho
-        # da diferenca em relacao ao valor digitado.
         historical["similarity_distance"] += (
             historical[column] - input_data[column]
         ).abs()
 
-    # Depois de calcular a distancia, ordeno do mais parecido para o menos parecido
-    # e mostro somente os 5 primeiros exemplos na tela.
     return (
         historical.sort_values("similarity_distance")
         .head(5)
@@ -506,10 +436,6 @@ def index():
         total_goals_conceded = int(form_values["total_goals_conceded"] or 0)
         matches_played = max(int(form_values["matches_played"] or 1), 1)
 
-        # Estes calculos sao feitos a partir do formulario.
-        # O usuario digita gols marcados, gols sofridos e jogos; o sistema calcula
-        # saldo de gols e media de gols, porque essas duas variaveis tambem entram
-        # na Arvore de Decisao.
         goal_difference = total_goals_scored - total_goals_conceded
         goals_per_match = round(total_goals_scored / matches_played, 2)
 
@@ -521,12 +447,7 @@ def index():
             "goals_per_match": goals_per_match,
         }
 
-        # Transformo o dicionario em DataFrame porque o scikit-learn espera receber
-        # os dados no mesmo formato usado no treino.
         input_df = pd.DataFrame([input_data], columns=FEATURE_COLUMNS)
-
-        # predict() devolve a classe final: 0 para eliminada ou 1 para avancou.
-        # predict_proba() devolve a probabilidade de cada classe.
         prediction = MODEL_DATA["model"].predict(input_df)[0]
         probabilities = MODEL_DATA["model"].predict_proba(input_df)[0]
 
