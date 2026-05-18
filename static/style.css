@@ -597,7 +597,7 @@ button:active {
 }
 
 .tree-image-wrap {
-    max-height: 440px;
+    max-height: 780px;
     margin-top: 14px;
     overflow: auto;
     border: 1px solid var(--line);
@@ -606,7 +606,7 @@ button:active {
 }
 
 .tree-image {
-    width: 1180px;
+    width: 2400px;
     max-width: none;
     display: block;
     background: #ffffff;
