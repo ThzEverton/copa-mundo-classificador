@@ -403,7 +403,9 @@ button:active {
     display: block;
     margin-top: 7px;
     color: var(--cream);
-    font-size: 1.85rem;
+    font-size: clamp(1.15rem, 2.4vw, 1.85rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
 }
 
 .empty-board {
@@ -500,6 +502,12 @@ button:active {
 .danger-text {
     font-style: normal;
     font-weight: 800;
+}
+
+.stage-text {
+    color: var(--muted);
+    font-size: 0.86rem;
+    font-weight: 700;
 }
 
 .success-text {

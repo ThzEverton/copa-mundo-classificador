@@ -107,6 +107,14 @@ python app.py</code></pre>
 
                         <div class="market-grid">
                             <div>
+                                <span>Fase atual</span>
+                                <strong>{{ result.current_stage }}</strong>
+                            </div>
+                            <div>
+                                <span>Fase estimada</span>
+                                <strong>{{ result.predicted_stage }}</strong>
+                            </div>
+                            <div>
                                 <span>Saldo</span>
                                 <strong>{{ result.goal_difference }}</strong>
                             </div>
@@ -119,8 +127,9 @@ python app.py</code></pre>
                         <div class="result-explain">
                             <strong>Como ler este resultado</strong>
                             <p>
-                                O modelo compara gols, saldo e quantidade de jogos
-                                com selecoes historicas da base.
+                                O modelo classifica se a campanha tem perfil de avanco
+                                e tambem estima ate que fase a selecao pode chegar,
+                                comparando os numeros com selecoes historicas da base.
                             </p>
                         </div>
                     {% else %}
@@ -175,6 +184,7 @@ python app.py</code></pre>
                                 {% else %}
                                     <em class="danger-text">Eliminada</em>
                                 {% endif %}
+                                <small class="stage-text">Chegou: {{ item.stage_label }}</small>
                             </article>
                         {% endfor %}
                     </div>

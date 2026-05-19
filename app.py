@@ -65,6 +65,15 @@ FEATURE_LABELS = {
     "goals_per_match": "Gols por jogo",
 }
 
+STAGE_LABELS = {
+    0: "Fase de grupos",
+    1: "Oitavas de final",
+    2: "Quartas de final",
+    3: "Semifinal",
+    4: "Disputa de terceiro lugar",
+    5: "Final",
+}
+
 
 def normalize_stage(stage_name):
     """Converte o nome da fase em numero para o modelo entender."""
@@ -315,6 +324,40 @@ def get_feature_importance(model):
     return sorted(importances, key=lambda item: item["importance"], reverse=True)
 
 
+def get_stage_label(stage_number):
+    """Transforma o numero da fase em texto para aparecer na tela."""
+    return STAGE_LABELS.get(int(stage_number), "Fase indefinida")
+
+
+def estimate_current_stage_from_matches(matches_played):
+    """
+    Estima em que fase a campanha esta pela quantidade de jogos informada.
+
+    Essa parte e uma regra simples para explicar a simulacao ao usuario.
+    A previsao principal continua sendo feita pelo modelo de classificacao.
+    """
+    if matches_played <= 3:
+        return 0
+    if matches_played == 4:
+        return 1
+    if matches_played == 5:
+        return 2
+    if matches_played == 6:
+        return 3
+    return 5
+
+
+def estimate_stage_from_similar_examples(similar_examples, prediction):
+    """Estima ate onde pode chegar olhando os exemplos historicos parecidos."""
+    if not similar_examples:
+        return 0
+
+    if int(prediction) == 0:
+        return 0
+
+    return max(int(item["stage_encoded"]) for item in similar_examples)
+
+
 def train_model():
     """Treina a Arvore de Decisao e devolve modelo, metricas e exemplos."""
     try:
@@ -396,6 +439,7 @@ def find_similar_examples(dataset, input_data):
     ]
 
     historical = dataset.copy()
+    historical["stage_label"] = historical["stage_encoded"].apply(get_stage_label)
 
     # Distancia simples: quanto menor, mais parecido com o formulario.
     historical["similarity_distance"] = 0
@@ -450,6 +494,12 @@ def index():
         input_df = pd.DataFrame([input_data], columns=FEATURE_COLUMNS)
         prediction = MODEL_DATA["model"].predict(input_df)[0]
         probabilities = MODEL_DATA["model"].predict_proba(input_df)[0]
+        current_stage = estimate_current_stage_from_matches(matches_played)
+        similar_examples = find_similar_examples(MODEL_DATA["dataset"], input_data)
+        predicted_stage = estimate_stage_from_similar_examples(
+            similar_examples,
+            prediction,
+        )
 
         advance_probability = round(probabilities[1] * 100, 2)
 
@@ -458,9 +508,10 @@ def index():
             "advance_probability": advance_probability,
             "goal_difference": goal_difference,
             "goals_per_match": goals_per_match,
+            "current_stage": get_stage_label(current_stage),
+            "predicted_stage": get_stage_label(predicted_stage),
+            "predicted_stage_number": predicted_stage,
         }
-
-        similar_examples = find_similar_examples(MODEL_DATA["dataset"], input_data)
 
     return render_template(
         "index.html",
